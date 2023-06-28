@@ -1,4 +1,4 @@
-# svgtotsx
+# PikaIcons to TSX
 
 To install dependencies:
 
