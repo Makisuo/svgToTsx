@@ -111,7 +111,7 @@ const generateComponent = async (file: BunFile, fileName: string) => {
 			
 		`
 
-		await Bun.write(`./out/${componentFileName}`, componentContent)
+		await Bun.write(`./out/${componentFileName.toLowerCase()}`, componentContent)
 	} catch (err) {
 		console.error(`Unable to process file: ${file}`, err)
 	}
