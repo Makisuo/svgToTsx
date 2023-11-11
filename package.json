@@ -5,6 +5,9 @@
 	"devDependencies": {
 		"bun-types": "^1.0.11"
 	},
+	"scripts": {
+		"generate": "bun run ./src/index.ts ./icons"
+	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
 	},
