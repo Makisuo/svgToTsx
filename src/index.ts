@@ -9,67 +9,16 @@ import meow from "meow"
 import chalk from "chalk"
 
 import gradient from "gradient-string"
+import { traverseFolder } from "./filer.helper"
+import { capitalizeFirstLetter, toCamelCase } from "./utils"
 
 const log = console.log
 
 log(gradient.instagram("Thanks for using Maki CLI!"))
 
-function camelize(str: string) {
-	const first = str
-		.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
-			return index === 0 ? word.toLowerCase() : word.toUpperCase()
-		})
-		.replace(/\s+/g, "")
-		.replace(/-/g, "")
-
-	return toCamelCase(first)
-}
-
-const toCamelCase = (str: string): string => {
-	return str.replace(/-([a-z])/g, function (g) {
-		return g[1].toUpperCase()
-	})
-}
-
-function startsWithNumber(s: string): boolean {
-	return !isNaN(Number(s.charAt(0)))
-}
-
-function capitalizeFirstLetter(s: string): string {
-	return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-function numberToWord(num: number): string {
-	switch (num) {
-		case 0:
-			return "Zero"
-		case 1:
-			return "One"
-		case 2:
-			return "Two"
-		case 3:
-			return "Three"
-		case 4:
-			return "Four"
-		case 5:
-			return "Five"
-		case 6:
-			return "Six"
-		case 7:
-			return "Seven"
-		case 8:
-			return "Eight"
-		case 9:
-			return "Nine"
-		default:
-			return ""
-	}
-}
-
 const generateTypeDefinition = async (outFolder = "./out") => {
 	const typesContent = `	
 	export interface IconProps  {
-	  class?: string
 	  className?: string
 	  size?: string | number
 	  absoluteStrokeWidth?: boolean
@@ -117,53 +66,6 @@ const generateComponent = async (file: BunFile, fileName: string) => {
 	}
 }
 
-const readFolder = async (folderPath: string, nested = false, depth = 0, nearestPath?: string) => {
-	const files = await fs.readdir(folderPath)
-
-	const returnedFiles: { name: string; path: string; nested: boolean; file: BunFile; fileName: string }[] = []
-
-	for (const file of files) {
-		if (file === ".DS_Store") {
-			continue
-		}
-
-		// If it a folder => traverse deeper
-		if (path.extname(file) === "") {
-			returnedFiles.push(...(await readFolder(`${folderPath}/${file}`, true, depth + 1, file)))
-		} else {
-			let name = camelize(file.replace(".svg", "").replace(/[^\w\s-]/gi, ""))
-
-			if (
-				name.toLowerCase() !== nearestPath?.toLowerCase() &&
-				!name.toLowerCase().includes(nearestPath?.toLowerCase() || "") &&
-				depth > 1
-			) {
-				name = camelize(nearestPath + name.replace(/^\w/, (c) => c.toUpperCase()))
-			} else {
-				if (name === "") {
-					name = camelize(nearestPath || "noNameManualRequired")
-				} else {
-					if (!isNaN(Number(name))) {
-						name = camelize(`${nearestPath}${name}`)
-					} else if (startsWithNumber(name)) {
-						name = numberToWord(Number(name.charAt(0))) + name.slice(1)
-					}
-				}
-			}
-
-			returnedFiles.push({
-				name: name,
-				path: folderPath,
-				fileName: file,
-				nested,
-				file: Bun.file(`${folderPath}/${file}`),
-			})
-		}
-	}
-
-	return returnedFiles
-}
-
 const cli = meow(
 	`
   Usage
@@ -194,7 +96,7 @@ const main = async () => {
 	const rootFolder = input[0] || "./"
 
 	try {
-		const files = await readFolder(rootFolder)
+		const files = await traverseFolder(rootFolder)
 		const svgFiles = files.filter((file) => path.extname(file.fileName) === ".svg")
 
 		if (flags.list) {
