@@ -15,12 +15,30 @@ export const toCamelCase = (str: string): string => {
 	})
 }
 
+export function replaceSpecialCharacters(string: string): string {
+	return string.replace(/@/g, "At")
+}
+
 export function startsWithNumber(s: string): boolean {
 	return !isNaN(Number(s.charAt(0)))
 }
 
 export function capitalizeFirstLetter(s: string): string {
 	return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+export function removeSpaces(string: string): string {
+	return string.replace(/\s+/g, "")
+}
+
+export function toKebabCase(str: string): string {
+	return (
+		str
+			// Insert a hyphen before each uppercase letter
+			.replace(/([a-z])([A-Z])/g, "$1-$2")
+			// Convert the whole string to lowercase
+			.toLowerCase()
+	)
 }
 
 export function numberToWord(num: number): string {

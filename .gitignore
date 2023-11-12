@@ -2,6 +2,9 @@
 
 # Logs
 
+out 
+icons
+
 logs
 _.log
 npm-debug.log_
@@ -10,8 +13,8 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-out
-icons
+# out
+# icons
 
 node_modules
 
@@ -115,7 +118,7 @@ web_modules/
 # Next.js build output
 
 .next
-out
+
 
 # Nuxt.js build / generate output
 

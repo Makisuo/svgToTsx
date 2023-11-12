@@ -1,54 +1,66 @@
-import fs from "fs/promises"
-import path from "path"
-import { camelize, numberToWord, startsWithNumber } from "./utils"
 import { BunFile } from "bun"
+import * as fs from "fs/promises"
+import * as path from "path"
+import { capitalizeFirstLetter, removeSpaces, replaceSpecialCharacters } from "./utils"
 
-export const traverseFolder = async (folderPath: string, nested = false, depth = 0, nearestPath?: string) => {
+interface ReturnedFile {
+	name: string
+	path: string
+	nested: boolean
+	file: BunFile
+	fileName: string
+}
+
+export const traverseFolder = async (
+	folderPath: string,
+	nested = false,
+	depth = 0,
+	parentFolderName = "",
+): Promise<ReturnedFile[]> => {
 	const files = await fs.readdir(folderPath)
-
-	const returnedFiles: { name: string; path: string; nested: boolean; file: BunFile; fileName: string }[] = []
+	const returnedFiles: ReturnedFile[] = []
 
 	for (const file of files) {
-		if (file === ".DS_Store") {
-			continue
-		}
+		if (file === ".DS_Store") continue
 
-		// If it a folder => traverse deeper
-		if (path.extname(file) === "") {
-			returnedFiles.push(...(await traverseFolder(`${folderPath}/${file}`, true, depth + 1, file)))
+		const fullPath = path.join(folderPath, file)
+
+		if (!path.extname(file)) {
+			const updatedFolderName =
+				depth === 0
+					? formatName(file.toLowerCase())
+					: parentFolderName + capitalizeFirstLetter(formatName(file))
+			returnedFiles.push(...(await traverseFolder(fullPath, true, depth + 1, updatedFolderName)))
 		} else {
-			let name = camelize(file.replace(".svg", "").replace(/[^\w\s-]/gi, ""))
-
-			if (name === "webhook") {
-				console.log(name)
-			}
-			if (
-				name.toLowerCase() !== nearestPath?.toLowerCase() &&
-				!name.toLowerCase().includes(nearestPath?.toLowerCase() || "") &&
-				depth > 1
-			) {
-				name = camelize(nearestPath + name.replace(/^\w/, (c) => c.toUpperCase()))
-			} else {
-				if (name === "") {
-					name = camelize(nearestPath || "noNameManualRequired")
-				} else {
-					if (!isNaN(Number(name))) {
-						name = camelize(`${nearestPath}${name}`)
-					} else if (startsWithNumber(name)) {
-						name = numberToWord(Number(name.charAt(0))) + name.slice(1)
-					}
-				}
-			}
+			const formattedFileName = formatName(file.replace(path.extname(file), ""))
+			// Determine the name based on whether the folder name is a subset of the file name
+			const name =
+				parentFolderName.toLowerCase() === formattedFileName.toLowerCase().slice(0, parentFolderName.length)
+					? formattedFileName
+					: parentFolderName + capitalizeFirstLetter(formattedFileName)
 
 			returnedFiles.push({
-				name: name,
+				name,
 				path: folderPath,
 				fileName: file,
 				nested,
-				file: Bun.file(`${folderPath}/${file}`),
+				file: Bun.file(fullPath),
 			})
 		}
 	}
 
 	return returnedFiles
+}
+
+const formatName = (name: string) => {
+	return removeSpaces(replaceSpecialCharacters(toCamelCase(name)))
+}
+
+function toCamelCase(str: string): string {
+	return str
+		.split(/[.\s_,-]+/)
+		.map((word, index) =>
+			index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+		)
+		.join("")
 }

@@ -6,10 +6,13 @@
 		"bun-types": "^1.0.11"
 	},
 	"scripts": {
+		"generate:format": "bun run ./src/index.ts ./icons && bunx biome format . --write",
 		"generate": "bun run ./src/index.ts ./icons"
 	},
 	"peerDependencies": {
-		"typescript": "^5.0.0"
+		"typescript": "^5.0.0",
+		"@types/react": "18.2.31",
+		"@types/react-dom": "^18.2.14"
 	},
 	"dependencies": {
 		"@types/gradient-string": "^1.1.5",

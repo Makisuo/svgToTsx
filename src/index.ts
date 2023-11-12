@@ -3,14 +3,14 @@
 import { BunFile } from "bun"
 
 import path from "path"
-import fs from "fs/promises"
 import meow from "meow"
 
 import chalk from "chalk"
 
 import gradient from "gradient-string"
 import { traverseFolder } from "./filer.helper"
-import { capitalizeFirstLetter, toCamelCase } from "./utils"
+import { capitalizeFirstLetter, toCamelCase, toKebabCase } from "./utils"
+import { clearOrCreateDirectory } from "./filer.clearer"
 
 const log = console.log
 
@@ -60,7 +60,7 @@ const generateComponent = async (file: BunFile, fileName: string) => {
 			
 		`
 
-		await Bun.write(`./out/${componentFileName.toLowerCase()}`, componentContent)
+		await Bun.write(`./out/${toKebabCase(componentFileName)}`, componentContent)
 	} catch (err) {
 		console.error(`Unable to process file: ${file}`, err)
 	}
@@ -95,6 +95,8 @@ const main = async () => {
 
 	const rootFolder = input[0] || "./"
 
+	clearOrCreateDirectory("./out")
+
 	try {
 		const files = await traverseFolder(rootFolder)
 		const svgFiles = files.filter((file) => path.extname(file.fileName) === ".svg")
@@ -108,6 +110,7 @@ const main = async () => {
 		}
 
 		for (const file of svgFiles) {
+			console.log(file.name)
 			await generateComponent(file.file, file.name)
 		}
 
